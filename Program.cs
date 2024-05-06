@@ -2,15 +2,19 @@
 
 namespace Elekta;
 
+using System;
+using System.Diagnostics.CodeAnalysis;
+
 using LocalOrbit = (string objectName, string orbitObjectName);
 
-class CodingTest
+public class CodingTest
 {
     private class CelestialObject
     {
         public CelestialObject() { }
 
-        public List<CelestialObject> OrbitObjects { set; get; } = new List<CelestialObject>();
+        [NotNull]
+        public List<CelestialObject> OrbitObjects { set; get; } = [];
     }
 
     private static void Main()
@@ -18,20 +22,19 @@ class CodingTest
         var tokens = ParseMapData();
         var objectsByName = new Dictionary<string, CelestialObject>();
 
-        tokens.ForEach(t =>
+        tokens.ForEach(token =>
         {
-            if (!objectsByName.ContainsKey(t.objectName))
+            if (!objectsByName.TryGetValue(token.objectName, out CelestialObject? celestialObject))
             {
-                objectsByName.Add(t.objectName, new CelestialObject());
+                celestialObject = new CelestialObject();
+                objectsByName.Add(token.objectName, celestialObject);
             }
 
-            if (!objectsByName.ContainsKey(t.orbitObjectName))
+            if (!objectsByName.TryGetValue(token.orbitObjectName, out CelestialObject? orbitObject))
             {
-                objectsByName.Add(t.orbitObjectName, new CelestialObject());
+                orbitObject = new CelestialObject();
+                objectsByName.Add(token.orbitObjectName, orbitObject);
             }
-
-            var celestialObject = objectsByName[t.objectName];
-            var orbitObject = objectsByName[t.orbitObjectName];
 
             celestialObject.OrbitObjects.Add(orbitObject);
         });
@@ -41,9 +44,9 @@ class CodingTest
         Console.WriteLine(OrbitCount(com));
     }
 
-    private static int OrbitCount(CelestialObject com)
+    private static int OrbitCount([NotNull] CelestialObject com)
     {
-        int OrbitCount(CelestialObject node, int depth)
+        static int OrbitCount([NotNull] CelestialObject node, int depth)
         {
             var output = depth;
 
@@ -58,6 +61,7 @@ class CodingTest
         return OrbitCount(com, 0);
     }
 
+    [return: NotNull]
     private static List<LocalOrbit> ParseMapData()
     {
         const char Separator = ')';
